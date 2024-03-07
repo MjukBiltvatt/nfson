@@ -16,7 +16,7 @@ Map(data []byte, obj interface{}, timeLoc *time.Location, subTagName string, rec
 - `timeLoc` is the location times in the json should be parse for.
 - `subTagName` is for having multiple different JSON structures that should map to the same struct. It is an addition to the base `nfson` struct tag, for example: to use struct tag `nfson_subTag` use `Map()` with `_subTag` as the `subTagName` value.
 - `recurseSubTag` indicates whether the `subTagName` should be kept when mapping recursively, if set it will look for the struct tag `nfson<subTagName>` in sub-structs as well, otherwise it will use the base `nfson`-struct tag for sub-structs.
-- `baseTags` is for "skipping" steps in the JSON, can be used if yyour struct is only for mapping part of the JSON. Is also used for recursive mapping so that the sub-structs don't have to specify the entire JSON-element path and is instead able to start from the JSON-path of the parent struct.
+- `baseTags` is for "skipping" steps in the JSON, can be used if your struct is only for mapping part of the JSON. Is also used for recursive mapping so that the sub-structs don't have to specify the entire JSON-element path and is instead able to start from the JSON-path of the parent struct.
 
 ## Supported types
 
