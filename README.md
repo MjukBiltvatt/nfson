@@ -1,8 +1,6 @@
 # nfson
 recursive JSON-parser for nested structs using valyala/fastjson
 
-Contains a single `Map()`-function for parsing JSON into a struct.
-
 Uses the struct-tag `nfson`.
 
 A JSON-path is specified in the `nfson`-struct tag as such:
