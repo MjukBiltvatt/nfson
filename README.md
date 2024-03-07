@@ -91,15 +91,15 @@ const (
 )
 
 type Company struct {
-    OrgNo   *int64  `nfson_user:"data.user.orgno" nfson_owner:"data.owner.orgno"`
-    Name    string  `nfson_user:"data.user.name" nfson_owner:"data.owner.name`
+    OrgNo   *int64  `nfson_user:"data.user.data.orgno" nfson_owner:"data.owner.data.orgno"`
+    Name    string  `nfson_user:"data.user.data.name" nfson_owner:"data.owner.data.name`
 
     // other relevant data
 }
 
 type Person struct {
-    SSN     *int64  `nfson_user:"data.user.ssn" nfson_owner:"data.owner.ssn"`
-    Name    string  `nfson_user:"data.user.name" nfson_owner:"data.owner.name"`
+    SSN     *int64  `nfson_user:"data.user.data.ssn" nfson_owner:"data.owner.data.ssn"`
+    Name    string  `nfson_user:"data.user.data.name" nfson_owner:"data.owner.data.name"`
 
     // other relevant data
 }
