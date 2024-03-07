@@ -1,5 +1,5 @@
 # nfson
-recursive JSON-parser for nested structs using valyala/fastjson
+recursive JSON-parser for nested structs using [valyala/fastjson](https://github.com/valyala/fastjson)
 
 Uses the struct-tag `nfson`.
 
