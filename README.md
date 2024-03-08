@@ -240,7 +240,7 @@ func main() {
 
 ## BaseTags
 
-`baseTags` is mainly used for recursively mapping nested structs, but can also be used for more manually mapping just part of a JSON.
+`baseTags` is mainly used internally in the `Map()`-function for recursively mapping nested structs, but can also be used for more manually mapping just part of a JSON.
 
 Example:
 ```json
