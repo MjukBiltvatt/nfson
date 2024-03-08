@@ -1,5 +1,5 @@
 # nfson
-Recursive JSON-parser for nested structs using [valyala/fastjson](https://github.com/valyala/fastjson).
+Recursive JSON-parser for nested structs in Golang using [valyala/fastjson](https://github.com/valyala/fastjson).
 
 Allows more dynamic JSON-mapping using subtags to conditionally map different parts of the JSON to different structs.
 
@@ -10,11 +10,31 @@ Map(data []byte, obj interface{}, timeLoc *time.Location, subTagName string, rec
 ```
 
 - `data` is the JSON as a byte array.
-- `obj` is a reference to the struct the JSOn should be mapped to
+- `obj` is a reference to the struct the JSON should be mapped to.
 - `timeLoc` is the location times in the json should be parse for.
 - `subTagName` is for having multiple different JSON structures that should map to the same struct. It is an addition to the base `nfson` struct tag, for example: to use struct tag `nfson_subTag` use `Map()` with `_subTag` as the `subTagName` value.
 - `recurseSubTag` indicates whether the `subTagName` should be kept when mapping recursively, if set it will look for the struct tag `nfson<subTagName>` in sub-structs as well, otherwise it will use the base `nfson`-struct tag for sub-structs.
 - `baseTags` is for "skipping" steps in the JSON, can be used if your struct is only for mapping part of the JSON. Is also used for recursive mapping so that the sub-structs don't have to specify the entire JSON-element path and is instead able to start from the JSON-path of the parent struct.
+
+## Supported types
+
+Values and references to values of the following types:
+
+- `string`
+- `int`, `int8`, `int16`, `int32`, `int64`
+- `uint`, `uint8`, `uint16`, `uint32`, `uint64`
+- `float32`, `float64`
+- `bool`
+- `time.Time`
+- `struct`
+
+## Supported time formats
+
+- `MM/dd/yyy HH:mm:ss`
+- `yyyy-MM-dd HH:mm:ss`
+- `MM/dd/yyyy`
+- `yyyy-MM-dd`
+- `yyyy-MM`
 
 ## Tags
 
@@ -49,12 +69,63 @@ type testSubStruct struct {
     TestField   *bool   `nfson:"key_1"`
 }
 ```
+You can re-use the same common struct as sub struct for different parent structs, for example both a person and a company may have an address:
+```json
+{
+    "data": {
+        "person": {
+            "name": "test testsson",
+            "ssn": 12345678,
+            "birthdate": "1999-12-31",
+            "address": {
+                "street": "test 123",
+                "zip": 12345,
+                "city": "test",
+                "country": "antarctica"
+            }
+        },
+        "company": {
+            "name": "test llc",
+            "orgno": 987654321,
+            "address": {
+                "street": "test 321",
+                "zip": 54321,
+                "city": "test",
+                "country": "antarctica"
+            }
+        },
+    }
+}
+```
+```go
+type address struct {
+    Street  string  `nfson:"street"`
+    Zip     *int64  `nfson:"zip"`
+    City    string  `nfson:"city"`
+    Country string  `nfson:"country"`
+}
+
+type person struct {
+    Name        string      `nfson:"data.person.name"`
+    SSN         *int64      `nfson:"data.person.ssn"`
+    Birthdate   *time.Time  `nfson:"data.person.birthdate"`
+    Address     *address    `nfson:"data.person.address"`
+}
+
+type company struct {
+    Name        string      `nfson:"data.company.name"`
+    OrgNo       *int64      `nfson:"data.company.orgno"`
+    Address     *address    `nfson:"data.company.address"`
+}
+```
 
 ## SubTags
 
-Sub tags allows having multiple different JSON-paths for the same struct field using an arbitrary suffix for the `nfson`-base tag.
+`subTag` allows having multiple different JSON-paths for the same struct field using an arbitrary suffix for the `nfson`-base tag.
 
 This can be useful if you wish to save the structs to a relational database. In the example below you can receive a JSON-object with detailed information about a car and its user/owner, map the car and any combination of person/company user/owner, save them to the database, and set the values required for the relationships.
+
+The following is an example of a car that has a user and an owner, either of them can be a person or a company.
 
 ```json
 {
@@ -64,14 +135,14 @@ This can be useful if you wish to save the structs to a relational database. In 
             "data": {
                 "type": "person",
                 "ssn": "0123456789",
-                "name": "Jon Doe"
+                "name": "John Doe"
             }
         },
         "owner": {
             "data": {
                 "type": "company",
                 "orgno": "9876543210",
-                "name": "umbrella corp"
+                "name": "test llc"
             }
         }
     }
@@ -163,27 +234,6 @@ func main() {
     car.SaveToDatabase() // pretend this saves the car to a database of your choice
 }
 ```
-
-## Supported types
-
-Values and references to values of the following types:
-
-- `string`
-- `int`, `int8`, `int16`, `int32`, `int64`
-- `uint`, `uint8`, `uint16`, `uint32`, `uint64`
-- `float32`, `float64`
-- `bool`
-- `time.Time`
-- `struct`
-
-## Supported time formats
-
-- `MM/dd/yyy HH:mm:ss`
-- `yyyy-MM-dd HH:mm:ss`
-- `MM/dd/yyyy`
-- `yyyy-MM-dd`
-- `yyyy-MM`
-
 
 ## Example
 ```json
