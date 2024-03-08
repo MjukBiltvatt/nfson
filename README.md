@@ -124,7 +124,7 @@ type company struct {
 
 ## SubTags
 
-`subTag` allows having multiple different JSON-paths for the same struct field using an arbitrary suffix for the `nfson`-base tag.
+`subTagName` allows having multiple different JSON-paths for the same struct field using an arbitrary suffix for the `nfson`-base tag.
 
 This can be useful if you wish to save the structs to a relational database. In the example below you can receive a JSON-object with detailed information about a car and its user/owner, map the car and any combination of person/company user/owner, save them to the database, and set the values required for the relationships.
 
