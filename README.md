@@ -238,6 +238,38 @@ func main() {
 }
 ```
 
+## BaseTags
+
+Example:
+```json
+{
+    "data": {
+        "subelement":{
+            "key_1": true
+        }
+    }
+}
+```
+```go
+type test struct {
+    Value   bool `nfson:"key_1"`
+}
+
+func main() {
+    bytes := whatever.GetSomeJSONBytes()
+
+    location, _ := time.LoadLocation("Europe/Stockholm")
+
+    example := test{}
+
+    // map starting from data.subelement 
+    nfson.Map(bytes, &example, location, "", false, "data", "subelement")
+
+    // or use the SplitTag function and write the BaseTags as a string like how they are in the struct tag
+    nfson.Map(bytes, &example, location, "", false, nfson.SplitTag("data.subelement"))
+}
+```
+
 ## Example
 ```json
 {
