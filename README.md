@@ -1,4 +1,7 @@
 # nfson
+
+***n***ested ***f***ast j***son***
+
 Recursive JSON-parser for nested structs in Golang using [valyala/fastjson](https://github.com/valyala/fastjson).
 
 Allows more dynamic JSON-mapping using subtags to conditionally map different parts of the JSON to different structs.
