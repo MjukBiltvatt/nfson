@@ -167,7 +167,7 @@ func SplitTag(tag string) []string {
 }
 
 func jtimeE(parsedJSONbytes *fastjson.Value, loc *time.Location, tags ...string) (time.Time, error) {
-	data := parsedJSONbytes.Get(tags...).String()
+	data := string(parsedJSONbytes.GetStringBytes(tags...)[:])
 
 	//Attempt to parse as timestamp in format MM/dd/yyyy HH:mm:ss
 	if match, err := regexp.MatchString(`^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$`, data); err != nil {
