@@ -9,10 +9,10 @@ Allows more dynamic JSON-mapping using subtags to conditionally map different pa
 The built in nesting support in the tags also allows you to have an arbitrary struct structure and still map the entire JSON. 
 
 ```
-Map(data []byte, obj interface{}, timeLoc *time.Location, subTagName string, recurseSubTag bool, baseTags ...string)
+Map(parsedJSONbytes *fastjson.Value, obj interface{}, timeLoc *time.Location, subTagName string, recurseSubTag bool, baseTags ...string)
 ```
 
-- `data` is the JSON as a byte array.
+- `parsedJSONbytes` is the JSON as a parsed fastjson value (required for speed optimization). ***Examples are of an old version that took a json byte array directly, in order for the examples to work you first have to call `fastjson.ParseBytes(data)` in order to parse the json byte array `data`.***
 - `obj` is a reference to the struct the JSON should be mapped to.
 - `timeLoc` is the location times in the json should be parse for.
 - `subTagName` is for having multiple different JSON structures that should map to the same struct. It is an addition to the base `nfson` struct tag, for example: to use struct tag `nfson_subTag` use `Map()` with `_subTag` as the `subTagName` value.
