@@ -15,14 +15,17 @@ const divider = "."
 
 var timeFormats = []string{"", ""}
 
-func Map(data []byte, obj interface{}, timeLoc *time.Location, subTagName string, recurseSubTag bool, baseTags ...string) {
+// Map maps the json from parsedJSONbytes or data to object obj, see readme for further details
+func Map(parsedJSONbytes *fastjson.Value, data []byte, obj interface{}, timeLoc *time.Location, subTagName string, recurseSubTag bool, baseTags ...string) {
 	v := reflect.ValueOf(obj).Elem()
-
-	//create fastjson parser for the json
-	parser, err := fastjson.ParseBytes(data)
-	if err != nil {
-		// TODO: handle error
-		fmt.Println(err)
+	var err error = nil
+	if parsedJSONbytes == nil {
+		// create fastjson parser for the json
+		parsedJSONbytes, err = fastjson.ParseBytes(data)
+		if err != nil {
+			// TODO: handle error
+			fmt.Println(err)
+		}
 	}
 
 	tempTagName := TagName + subTagName
@@ -53,19 +56,19 @@ func Map(data []byte, obj interface{}, timeLoc *time.Location, subTagName string
 			// If underlying type is neither pointer nor struct
 			switch field.Interface().(type) {
 			case string:
-				field.SetString(string(parser.Get(tags...).GetStringBytes()))
+				field.SetString(string(parsedJSONbytes.Get(tags...).GetStringBytes()))
 				continue
 			case int, int8, int16, int32, int64:
-				field.SetInt(parser.GetInt64(tags...))
+				field.SetInt(parsedJSONbytes.GetInt64(tags...))
 				continue
 			case uint, uint8, uint16, uint32, uint64:
-				field.SetUint(parser.GetUint64(tags...))
+				field.SetUint(parsedJSONbytes.GetUint64(tags...))
 				continue
 			case float32, float64:
-				field.SetFloat(parser.GetFloat64(tags...))
+				field.SetFloat(parsedJSONbytes.GetFloat64(tags...))
 				continue
 			case bool:
-				field.SetBool(parser.GetBool(tags...))
+				field.SetBool(parsedJSONbytes.GetBool(tags...))
 				continue
 			case time.Time:
 				field.Set(reflect.ValueOf(jtime(data, timeLoc, tags...)))
@@ -74,7 +77,7 @@ func Map(data []byte, obj interface{}, timeLoc *time.Location, subTagName string
 
 		} else {
 			// If underlying type is pointer
-			if parser.Get(tags...).Type() == fastjson.TypeNull {
+			if parsedJSONbytes.Get(tags...).Type() == fastjson.TypeNull {
 				continue
 			}
 			switch field.Interface().(type) {
@@ -90,59 +93,59 @@ func Map(data []byte, obj interface{}, timeLoc *time.Location, subTagName string
 				}
 				continue
 			case *string:
-				str := string(parser.GetStringBytes(tags...))
+				str := string(parsedJSONbytes.GetStringBytes(tags...))
 				field.Set(reflect.ValueOf(&str))
 				continue
 			case *int:
-				int := int(parser.GetInt64(tags...))
+				int := int(parsedJSONbytes.GetInt64(tags...))
 				field.Set(reflect.ValueOf(&int))
 				continue
 			case *int8:
-				int8 := int8(parser.GetInt64(tags...))
+				int8 := int8(parsedJSONbytes.GetInt64(tags...))
 				field.Set(reflect.ValueOf(&int8))
 				continue
 			case *int16:
-				int16 := int16(parser.GetInt64(tags...))
+				int16 := int16(parsedJSONbytes.GetInt64(tags...))
 				field.Set(reflect.ValueOf(&int16))
 				continue
 			case *int32:
-				int32 := int32(parser.GetInt64(tags...))
+				int32 := int32(parsedJSONbytes.GetInt64(tags...))
 				field.Set(reflect.ValueOf(&int32))
 				continue
 			case *int64:
-				int64 := parser.GetInt64(tags...)
+				int64 := parsedJSONbytes.GetInt64(tags...)
 				field.Set(reflect.ValueOf(&int64))
 				continue
 			case *uint:
-				uint := uint(parser.GetUint64(tags...))
+				uint := uint(parsedJSONbytes.GetUint64(tags...))
 				field.Set(reflect.ValueOf(&uint))
 				continue
 			case *uint8:
-				uint8 := uint8(parser.GetUint64(tags...))
+				uint8 := uint8(parsedJSONbytes.GetUint64(tags...))
 				field.Set(reflect.ValueOf(&uint8))
 				continue
 			case *uint16:
-				uint16 := uint16(parser.GetUint64(tags...))
+				uint16 := uint16(parsedJSONbytes.GetUint64(tags...))
 				field.Set(reflect.ValueOf(&uint16))
 				continue
 			case *uint32:
-				uint32 := uint32(parser.GetUint64(tags...))
+				uint32 := uint32(parsedJSONbytes.GetUint64(tags...))
 				field.Set(reflect.ValueOf(&uint32))
 				continue
 			case *uint64:
-				uint64 := parser.GetUint64(tags...)
+				uint64 := parsedJSONbytes.GetUint64(tags...)
 				field.Set(reflect.ValueOf(&uint64))
 				continue
 			case *float32:
-				float32 := float32(parser.GetFloat64(tags...))
+				float32 := float32(parsedJSONbytes.GetFloat64(tags...))
 				field.Set(reflect.ValueOf(&float32))
 				continue
 			case *float64:
-				float64 := parser.GetFloat64(tags...)
+				float64 := parsedJSONbytes.GetFloat64(tags...)
 				field.Set(reflect.ValueOf(&float64))
 				continue
 			case *bool:
-				bool := parser.GetBool(tags...)
+				bool := parsedJSONbytes.GetBool(tags...)
 				field.Set(reflect.ValueOf(&bool))
 				continue
 			}
@@ -151,17 +154,17 @@ func Map(data []byte, obj interface{}, timeLoc *time.Location, subTagName string
 		if field.Kind() == reflect.Struct {
 			//Map nested struct
 			if recurseSubTag {
-				Map(data, field.Addr().Interface(), timeLoc, subTagName, true, tags...)
+				Map(parsedJSONbytes, nil, field.Addr().Interface(), timeLoc, subTagName, true, tags...)
 			} else {
-				Map(data, field.Addr().Interface(), timeLoc, "", false, tags...)
+				Map(parsedJSONbytes, nil, field.Addr().Interface(), timeLoc, "", false, tags...)
 			}
 			continue
 		} else if field.Kind() == reflect.Pointer && field.Elem().Kind() == reflect.Struct {
 			//Map nested pointer to struct
 			if recurseSubTag {
-				Map(data, field.Interface(), timeLoc, subTagName, true, tags...)
+				Map(parsedJSONbytes, nil, field.Interface(), timeLoc, subTagName, true, tags...)
 			} else {
-				Map(data, field.Interface(), timeLoc, "", false, tags...)
+				Map(parsedJSONbytes, nil, field.Interface(), timeLoc, "", false, tags...)
 			}
 			continue
 		}
