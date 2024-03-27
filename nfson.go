@@ -16,19 +16,8 @@ const divider = "."
 var timeFormats = []string{"", ""}
 
 // Map maps the json from parsedJSONbytes or data to object obj, see readme for further details
-func Map(parsedJSONbytes *fastjson.Value, data []byte, obj interface{}, timeLoc *time.Location, subTagName string, recurseSubTag bool, baseTags ...string) error {
-	if parsedJSONbytes == nil && data == nil {
-		return fmt.Errorf("neither parsed nor byte array json provided to nfson")
-	}
+func Map(parsedJSONbytes *fastjson.Value, obj interface{}, timeLoc *time.Location, subTagName string, recurseSubTag bool, baseTags ...string) {
 	v := reflect.ValueOf(obj).Elem()
-	var err error = nil
-	if parsedJSONbytes == nil {
-		// create fastjson parser for the json
-		parsedJSONbytes, err = fastjson.ParseBytes(data)
-		if err != nil {
-			return err
-		}
-	}
 
 	tempTagName := TagName + subTagName
 
@@ -49,7 +38,7 @@ func Map(parsedJSONbytes *fastjson.Value, data []byte, obj interface{}, timeLoc 
 		//Append baseTags, mainly used to simplify mapping of nested structs
 		tags = append(baseTags, tags...)
 
-		if !fastjson.Exists(data, tags...) {
+		if !parsedJSONbytes.Exists(tags...) {
 			continue
 		}
 
@@ -73,7 +62,7 @@ func Map(parsedJSONbytes *fastjson.Value, data []byte, obj interface{}, timeLoc 
 				field.SetBool(parsedJSONbytes.GetBool(tags...))
 				continue
 			case time.Time:
-				field.Set(reflect.ValueOf(jtime(data, timeLoc, tags...)))
+				field.Set(reflect.ValueOf(jtime(parsedJSONbytes, timeLoc, tags...)))
 				continue
 			}
 
@@ -84,7 +73,7 @@ func Map(parsedJSONbytes *fastjson.Value, data []byte, obj interface{}, timeLoc 
 			}
 			switch field.Interface().(type) {
 			case *time.Time:
-				t := jtime(data, timeLoc, tags...)
+				t := jtime(parsedJSONbytes, timeLoc, tags...)
 				//Only set field if time is not zero
 				if field.IsNil() && !t.IsZero() {
 					//Nil pointer
@@ -156,30 +145,29 @@ func Map(parsedJSONbytes *fastjson.Value, data []byte, obj interface{}, timeLoc 
 		if field.Kind() == reflect.Struct {
 			//Map nested struct
 			if recurseSubTag {
-				Map(parsedJSONbytes, nil, field.Addr().Interface(), timeLoc, subTagName, true, tags...)
+				Map(parsedJSONbytes, field.Addr().Interface(), timeLoc, subTagName, true, tags...)
 			} else {
-				Map(parsedJSONbytes, nil, field.Addr().Interface(), timeLoc, "", false, tags...)
+				Map(parsedJSONbytes, field.Addr().Interface(), timeLoc, "", false, tags...)
 			}
 			continue
 		} else if field.Kind() == reflect.Pointer && field.Elem().Kind() == reflect.Struct {
 			//Map nested pointer to struct
 			if recurseSubTag {
-				Map(parsedJSONbytes, nil, field.Interface(), timeLoc, subTagName, true, tags...)
+				Map(parsedJSONbytes, field.Interface(), timeLoc, subTagName, true, tags...)
 			} else {
-				Map(parsedJSONbytes, nil, field.Interface(), timeLoc, "", false, tags...)
+				Map(parsedJSONbytes, field.Interface(), timeLoc, "", false, tags...)
 			}
 			continue
 		}
 	}
-	return nil
 }
 
 func SplitTag(tag string) []string {
 	return strings.Split(tag, divider)
 }
 
-func jtimeE(json []byte, loc *time.Location, tags ...string) (time.Time, error) {
-	data := string(fastjson.GetBytes(json, tags...)[:])
+func jtimeE(parsedJSONbytes *fastjson.Value, loc *time.Location, tags ...string) (time.Time, error) {
+	data := parsedJSONbytes.Get(tags...).String()
 
 	//Attempt to parse as timestamp in format MM/dd/yyyy HH:mm:ss
 	if match, err := regexp.MatchString(`^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$`, data); err != nil {
@@ -219,8 +207,8 @@ func jtimeE(json []byte, loc *time.Location, tags ...string) (time.Time, error) 
 	return time.Time{}, fmt.Errorf("failed to parse \"%v\" as type \"%s\"", data, "time.Time")
 }
 
-func jtime(json []byte, loc *time.Location, tags ...string) time.Time {
-	time, err := jtimeE(json, loc, tags...)
+func jtime(parsedJSONbytes *fastjson.Value, loc *time.Location, tags ...string) time.Time {
+	time, err := jtimeE(parsedJSONbytes, loc, tags...)
 	// TODO: handle error
 	if err != nil {
 		fmt.Println("error:", err)
