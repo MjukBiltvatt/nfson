@@ -16,15 +16,17 @@ const divider = "."
 var timeFormats = []string{"", ""}
 
 // Map maps the json from parsedJSONbytes or data to object obj, see readme for further details
-func Map(parsedJSONbytes *fastjson.Value, data []byte, obj interface{}, timeLoc *time.Location, subTagName string, recurseSubTag bool, baseTags ...string) {
+func Map(parsedJSONbytes *fastjson.Value, data []byte, obj interface{}, timeLoc *time.Location, subTagName string, recurseSubTag bool, baseTags ...string) error {
+	if parsedJSONbytes == nil && data == nil {
+		return fmt.Errorf("neither parsed nor byte array json provided to nfson")
+	}
 	v := reflect.ValueOf(obj).Elem()
 	var err error = nil
 	if parsedJSONbytes == nil {
 		// create fastjson parser for the json
 		parsedJSONbytes, err = fastjson.ParseBytes(data)
 		if err != nil {
-			// TODO: handle error
-			fmt.Println(err)
+			return err
 		}
 	}
 
@@ -169,6 +171,7 @@ func Map(parsedJSONbytes *fastjson.Value, data []byte, obj interface{}, timeLoc 
 			continue
 		}
 	}
+	return nil
 }
 
 func SplitTag(tag string) []string {
